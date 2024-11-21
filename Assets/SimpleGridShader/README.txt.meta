@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5245fc1cc54647c449d9c9a5d2cc2361
+timeCreated: 1527928598
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 119988
+  packageName: Simple Grid Shader
+  packageVersion: 1.0
+  assetPath: Assets/SimpleGridShader/README.txt
+  uploadId: 275166
