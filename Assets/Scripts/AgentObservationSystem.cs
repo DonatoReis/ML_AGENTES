@@ -8,15 +8,15 @@ public class AgentObservationSystem : MonoBehaviour
     private AgentMovement movementSystem;
     private AgentObjectiveSystem objectiveSystem;
 
-    [Header("Configurações do Raycast")]
-    public int numRaycastsBaixo = 7;
-    public int numRaycastsMedio = 17;
-    public int numRaycastsAlto = 17;
+    [Header("Raycast Settings")]
+    public int numRaycastsLow = 7;
+    public int numRaycastsMedium = 17;
+    public int numRaycastsHigh = 17;
     public float raycastFOV = 70f;
     public float rayLength = 20f;
     public LayerMask detectableLayers;
 
-    [Header("Configurações de Observação")]
+    [Header("Observation Settings")]
     public int stackedObservations = 6;
 
     private Queue<ObservationData> observationHistory;
@@ -65,10 +65,10 @@ public class AgentObservationSystem : MonoBehaviour
 
     public void CollectObservations(VectorSensor sensor)
     {
-        // Adiciona a posição do agente
+        // Add the agent's position
         sensor.AddObservation(transform.position);
 
-        // Adiciona histórico de observações
+        // Add observation history
         foreach (var obs in observationHistory)
         {
             sensor.AddObservation(obs.position);
@@ -76,36 +76,36 @@ public class AgentObservationSystem : MonoBehaviour
             sensor.AddObservation(obs.wasGrounded ? 1.0f : 0.0f);
         }
 
-        // Adiciona a posição relativa dos objetivos
+        // Add the relative position of the goals
         foreach (var goal in objectiveSystem.allGoals)
         {
             Vector3 relativePosition = goal.transform.position - transform.position;
             sensor.AddObservation(relativePosition);
         }
 
-        // Adiciona o número de objetivos restantes
+        // Add the number of remaining goals
         int goalsRemaining = objectiveSystem.totalGoals - objectiveSystem.visitedGoalsCount;
         sensor.AddObservation(goalsRemaining);
 
-        // Realiza os raycasts
+        // Perform the raycasts
         CastRaycasts(sensor);
     }
 
     private void CastRaycasts(VectorSensor sensor)
     {
-        // Raycasts baixos (apontando para baixo)
-        CastRaysAtAngle(-15f, numRaycastsBaixo, sensor);
+        // Low raycasts (pointing downward)
+        CastRaysAtAngle(-15f, numRaycastsLow, sensor);
 
-        // Raycasts médios (horizontais)
-        CastRaysAtAngle(0f, numRaycastsMedio, sensor);
+        // Medium raycasts (horizontal)
+        CastRaysAtAngle(0f, numRaycastsMedium, sensor);
 
-        // Raycasts altos (apontando para cima)
-        CastRaysAtAngle(15f, numRaycastsAlto, sensor);
+        // High raycasts (pointing upward)
+        CastRaysAtAngle(15f, numRaycastsHigh, sensor);
     }
 
     private void CastRaysAtAngle(float pitchAngle, int numRays, VectorSensor sensor)
     {
-        Vector3 rayStart = transform.position; // Origem dos raycasts é o centro do agente
+        Vector3 rayStart = transform.position; // Raycast origin is the center of the agent
         float angleStep = raycastFOV / (numRays - 1);
         float startAngle = -raycastFOV / 2;
 
@@ -113,21 +113,21 @@ public class AgentObservationSystem : MonoBehaviour
         {
             float yawAngle = startAngle + i * angleStep;
 
-            // Calcula a direção do raycast com yaw e pitch
+            // Calculate the raycast direction with yaw and pitch
             Quaternion rotation = Quaternion.Euler(pitchAngle, yawAngle + transform.eulerAngles.y, 0);
             Vector3 direction = rotation * Vector3.forward;
 
             RaycastHit hit;
             bool hasHit = Physics.Raycast(rayStart, direction, out hit, rayLength, detectableLayers);
 
-            // Presença de objeto
+            // Presence of an object
             sensor.AddObservation(hasHit ? 1.0f : 0.0f);
 
-            // Distância normalizada
+            // Normalized distance
             sensor.AddObservation(hasHit ? hit.distance / rayLength : 1.0f);
 
-            // Tipo de objeto (one-hot encoding)
-            float[] objectType = new float[4]; // Supondo 4 tipos de objetos detectáveis
+            // Object type (one-hot encoding)
+            float[] objectType = new float[4]; // Assuming 4 types of detectable objects
             if (hasHit)
             {
                 int layerIndex = hit.collider.gameObject.layer;
@@ -140,7 +140,7 @@ public class AgentObservationSystem : MonoBehaviour
                 else if (layerIndex == LayerMask.NameToLayer("Platform"))
                     objectType[3] = 1.0f;
             }
-            // Adiciona o tipo de objeto
+            // Add the object type
             foreach (var val in objectType)
             {
                 sensor.AddObservation(val);
@@ -148,23 +148,23 @@ public class AgentObservationSystem : MonoBehaviour
         }
     }
 
-    // Atualização do método para desenhar os gizmos com o novo ângulo
+    // Update the method to draw gizmos with the new angle
     private void OnDrawGizmos()
     {
-        // Raycasts baixos (apontando para baixo)
-        DrawRaycastsGizmos(-10f, numRaycastsBaixo, Color.green);
+        // Low raycasts (pointing downward)
+        DrawRaycastsGizmos(-10f, numRaycastsLow, Color.green);
 
-        // Raycasts médios (horizontais)
-        DrawRaycastsGizmos(0f, numRaycastsMedio, Color.yellow);
+        // Medium raycasts (horizontal)
+        DrawRaycastsGizmos(0f, numRaycastsMedium, Color.yellow);
 
-        // Raycasts altos (apontando para cima)
-        DrawRaycastsGizmos(10f, numRaycastsAlto, Color.red);
+        // High raycasts (pointing upward)
+        DrawRaycastsGizmos(10f, numRaycastsHigh, Color.red);
     }
 
     private void DrawRaycastsGizmos(float pitchAngle, int numRays, Color color)
     {
         Gizmos.color = color;
-        Vector3 rayStart = transform.position; // Origem dos raycasts é o centro do agente
+        Vector3 rayStart = transform.position; // Raycast origin is the center of the agent
         float angleStep = raycastFOV / (numRays - 1);
         float startAngle = -raycastFOV / 2;
 
@@ -172,7 +172,7 @@ public class AgentObservationSystem : MonoBehaviour
         {
             float yawAngle = startAngle + i * angleStep;
 
-            // Calcula a direção do raycast com yaw e pitch
+            // Calculate the raycast direction with yaw and pitch
             Quaternion rotation = Quaternion.Euler(pitchAngle, yawAngle + transform.eulerAngles.y, 0);
             Vector3 direction = rotation * Vector3.forward;
 

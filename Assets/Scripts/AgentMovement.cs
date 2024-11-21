@@ -4,18 +4,18 @@ using Unity.MLAgents.Actuators;
 
 public class AgentMovement : MonoBehaviour
 {
-    [Header("Configurações de Movimento")]
+    [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float rotateSpeed = 100f;
 
-    [Header("Configurações de Pulo")]
+    [Header("Jump Settings")]
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
     public LayerMask wallLayer;
     public LayerMask obstacleLayer;
     public float maxJumpCooldown = 5f;
     public float maxJumpHeight = 5f;
-    public float minJumpHeightThreshold = 0.5f; // Threshold mínimo para considerar como pulo
+    public float minJumpHeightThreshold = 0.5f; // Minimum threshold to consider as a jump
 
     private Rigidbody rb;
     private Vector3 startPosition;
@@ -24,11 +24,11 @@ public class AgentMovement : MonoBehaviour
     private NavigationAgentController agentController;
     private RaycastHit groundHit;
 
-    // Variáveis para o Curriculum Learning
+    // Variables for Curriculum Learning
     private bool movementAllowed = true;
     private bool jumpAllowed = true;
 
-    // Variáveis para monitorar o pulo
+    // Variables to monitor jump
     private bool isJumpingOverObstacle = false;
     private bool collidedWithObstacle = false;
     private bool wasGrounded = true;
@@ -67,7 +67,7 @@ public class AgentMovement : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
         lastJumpTime = -maxJumpCooldown;
 
-        // Resetar as flags de pulo
+        // Reset jump flags
         isJumpingOverObstacle = false;
         collidedWithObstacle = false;
         wasGrounded = true;
@@ -86,21 +86,21 @@ public class AgentMovement : MonoBehaviour
             groundLayer | wallLayer
         );
 
-        // Lógica de detecção de pulo
+        // Jump detection logic
         if (!isGrounded && wasGrounded)
         {
-            // Iniciou um pulo
+            // Started a jump
             jumpStartHeight = transform.position.y;
             maxHeightReached = jumpStartHeight;
         }
         else if (!isGrounded)
         {
-            // Durante o pulo
+            // During the jump
             maxHeightReached = Mathf.Max(maxHeightReached, transform.position.y);
         }
         else if (!wasGrounded && isGrounded)
         {
-            // Finalizou um pulo
+            // Finished a jump
             float jumpHeight = maxHeightReached - jumpStartHeight;
             if (jumpHeight > minJumpHeightThreshold)
             {
@@ -113,7 +113,7 @@ public class AgentMovement : MonoBehaviour
 
     public void ProcessActions(ActionBuffers actions)
     {
-        // Resetar as flags de pulo a cada ação
+        // Reset jump flags each action
         isJumpingOverObstacle = false;
         collidedWithObstacle = false;
 
@@ -121,14 +121,14 @@ public class AgentMovement : MonoBehaviour
         float rotate = movementAllowed ? actions.ContinuousActions[1] : 0f;
         bool jump = actions.DiscreteActions[0] == 1 && jumpAllowed;
 
-        // Movimento
+        // Movement
         Vector3 movement = transform.forward * moveForward * moveSpeed;
         rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
 
-        // Rotação
+        // Rotation
         transform.Rotate(0, rotate * rotateSpeed * Time.fixedDeltaTime, 0);
 
-        // Pulo
+        // Jump
         if (jump && isGrounded && Time.time > lastJumpTime + maxJumpCooldown)
         {
             float gravity = Physics.gravity.y;
@@ -144,9 +144,9 @@ public class AgentMovement : MonoBehaviour
         var continuousActionsOut = actionsOut.ContinuousActions;
         var discreteActionsOut = actionsOut.DiscreteActions;
 
-        // Usando Input.GetAxis para um controle mais suave
-        continuousActionsOut[0] = Input.GetAxis("Vertical");   // W/S ou setas para cima/baixo
-        continuousActionsOut[1] = Input.GetAxis("Horizontal"); // A/D ou setas para esquerda/direita
+        // Using Input.GetAxis for smoother control
+        continuousActionsOut[0] = Input.GetAxis("Vertical");   // W/S or up/down arrows
+        continuousActionsOut[1] = Input.GetAxis("Horizontal"); // A/D or left/right arrows
         discreteActionsOut[0] = Input.GetKey(KeyCode.Space) ? 1 : 0;
     }
 

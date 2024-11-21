@@ -3,27 +3,27 @@ using System.Collections;
 
 public class TargetPlatform : MonoBehaviour
 {
-    [Header("Configurações de Cor")]
-    [SerializeField] private Color corNormal = Color.red;
-    [SerializeField] private Color corAtivada = Color.green;
+    [Header("Color Settings")]
+    [SerializeField] private Color normalColor = Color.red;
+    [SerializeField] private Color activatedColor = Color.green;
 
-    [Header("Configurações de Movimento")]
-    [SerializeField] private float distanciaAbaixar = 0.3f;
-    [SerializeField] private float velocidadeMovimento = 2f;
-    [SerializeField] private float tempoEspera = 10f;
+    [Header("Movement Settings")]
+    [SerializeField] private float loweringDistance = 0.3f;
+    [SerializeField] private float movementSpeed = 2f;
+    [SerializeField] private float waitTime = 10f;
 
-    [Header("Configurações da Porta")]
+    [Header("Door Settings")]
     [SerializeField] private Door door;
 
     private MeshRenderer meshRenderer;
-    private Vector3 posicaoInicial;
-    private Vector3 posicaoAbaixada;
-    private bool estaEmContato = false;
-    private Coroutine movimentoCoroutine;
-    private Coroutine tempoCoroutine;
+    private Vector3 initialPosition;
+    private Vector3 loweredPosition;
+    private bool isInContact = false;
+    private Coroutine movementCoroutine;
+    private Coroutine timeCoroutine;
 
-    [Header("Configurações de Áudio")]
-    [SerializeField] private AudioClip somPiso;
+    [Header("Audio Settings")]
+    [SerializeField] private AudioClip floorSound;
     [SerializeField] private AudioSource audioSource;
 
     private void Start()
@@ -31,16 +31,16 @@ public class TargetPlatform : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         if (meshRenderer == null)
         {
-            Debug.LogError("MeshRenderer não encontrado! Desativando o script.");
+            Debug.LogError("MeshRenderer not found! Disabling the script.");
             enabled = false;
             return;
         }
 
         meshRenderer.material = new Material(meshRenderer.material);
-        meshRenderer.material.color = corNormal;
+        meshRenderer.material.color = normalColor;
 
-        posicaoInicial = transform.position;
-        posicaoAbaixada = posicaoInicial - new Vector3(0, distanciaAbaixar, 0);
+        initialPosition = transform.position;
+        loweredPosition = initialPosition - new Vector3(0, loweringDistance, 0);
 
         if (audioSource == null)
         {
@@ -53,11 +53,11 @@ public class TargetPlatform : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("albert"))
         {
-            AtivaPlataforma();
+            ActivatePlatform();
 
-            if (audioSource != null && somPiso != null)
+            if (audioSource != null && floorSound != null)
             {
-                audioSource.PlayOneShot(somPiso);
+                audioSource.PlayOneShot(floorSound);
             }
         }
     }
@@ -66,7 +66,7 @@ public class TargetPlatform : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("albert"))
         {
-            estaEmContato = true;
+            isInContact = true;
         }
     }
 
@@ -74,64 +74,64 @@ public class TargetPlatform : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("albert"))
         {
-            DesativaPlataforma();
+            DeactivatePlatform();
         }
     }
 
-    private void AtivaPlataforma()
+    private void ActivatePlatform()
     {
-        if (estaEmContato) return;
+        if (isInContact) return;
 
-        estaEmContato = true;
+        isInContact = true;
         StopCoroutines();
 
-        meshRenderer.material.color = corAtivada;
+        meshRenderer.material.color = activatedColor;
 
-        movimentoCoroutine = StartCoroutine(MoverPlataforma(transform.position, posicaoAbaixada));
+        movementCoroutine = StartCoroutine(MovePlatform(transform.position, loweredPosition));
 
         door?.OpenDoor();
     }
 
-    private void DesativaPlataforma()
+    private void DeactivatePlatform()
     {
-        estaEmContato = false;
-        tempoCoroutine = StartCoroutine(EsperarEDesativar());
+        isInContact = false;
+        timeCoroutine = StartCoroutine(WaitAndDeactivate());
     }
 
-    private IEnumerator EsperarEDesativar()
+    private IEnumerator WaitAndDeactivate()
     {
-        yield return new WaitForSeconds(tempoEspera);
+        yield return new WaitForSeconds(waitTime);
 
-        if (!estaEmContato)
+        if (!isInContact)
         {
-            meshRenderer.material.color = corNormal;
-            movimentoCoroutine = StartCoroutine(MoverPlataforma(transform.position, posicaoInicial));
+            meshRenderer.material.color = normalColor;
+            movementCoroutine = StartCoroutine(MovePlatform(transform.position, initialPosition));
             door?.CloseDoor();
         }
     }
 
-    private IEnumerator MoverPlataforma(Vector3 posicaoInicio, Vector3 posicaoAlvo)
+    private IEnumerator MovePlatform(Vector3 startPosition, Vector3 targetPosition)
     {
-        while (Vector3.Distance(transform.position, posicaoAlvo) > 0.01f)
+        while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, posicaoAlvo, velocidadeMovimento * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, movementSpeed * Time.deltaTime);
             yield return null;
         }
-        transform.position = posicaoAlvo;
+        transform.position = targetPosition;
     }
 
     private void StopCoroutines()
     {
-        if (movimentoCoroutine != null)
+        if (movementCoroutine != null)
         {
-            StopCoroutine(movimentoCoroutine);
-            movimentoCoroutine = null;
+            StopCoroutine(movementCoroutine);
+            movementCoroutine = null;
         }
 
-        if (tempoCoroutine != null)
+        if (timeCoroutine != null)
         {
-            StopCoroutine(tempoCoroutine);
-            tempoCoroutine = null;
+            StopCoroutine(timeCoroutine);
+            timeCoroutine = null;
         }
     }
 }

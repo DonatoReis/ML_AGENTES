@@ -4,16 +4,16 @@ using TMPro;
 
 public class AgentObjectiveSystem : MonoBehaviour
 {
-    [Header("Objetivos")]
+    [Header("Objectives")]
     public Transform GoalsParent;
     public List<GameObject> allGoals = new List<GameObject>();
     private List<GameObject> visitedGoals = new List<GameObject>();
 
-    // Propriedades para acessar os contadores
+    // Properties to access the counters
     public int totalGoals { get { return allGoals.Count; } }
     public int visitedGoalsCount { get { return visitedGoals.Count; } }
 
-    [Header("Configurações")]
+    [Header("Settings")]
     public float goalReachDistance = 1.5f;
 
     [Header("Timer Settings")]
@@ -30,15 +30,15 @@ public class AgentObjectiveSystem : MonoBehaviour
 
     private NavigationAgentController agentController;
 
-    // Variáveis para o Curriculum Learning
+    // Variables for Curriculum Learning
     private bool explorationAllowed = true;
     private bool objectiveActive = true;
 
-    // **Nova variável pública para o objetivo específico**
-    [Header("Configurações do Objetivo Específico")]
-    public GameObject specificGoal; // Arraste o objetivo específico no Inspector
+    // **New public variable for the specific objective**
+    [Header("Specific Objective Settings")]
+    public GameObject specificGoal; // Drag the specific objective in the Inspector
 
-    // Flag para controlar se o reset por tempo está habilitado
+    // Flag to control if time reset is enabled
     private bool timeResetEnabled = true;
 
     public struct ObjectiveState
@@ -56,17 +56,17 @@ public class AgentObjectiveSystem : MonoBehaviour
         UpdateUI();
         InitializeGoals();
 
-        // Resetar a flag no início do episódio
+        // Reset the flag at the start of the episode
         timeResetEnabled = true;
     }
 
     private void InitializeGoals()
     {
-        // Limpa as listas
+        // Clear the lists
         allGoals.Clear();
         visitedGoals.Clear();
 
-        // Encontra todos os objetivos com a tag "Goal" que são filhos do GoalsParent
+        // Find all goals with the tag "Goal" that are children of GoalsParent
         if (GoalsParent != null)
         {
             foreach (Transform child in GoalsParent)
@@ -74,7 +74,7 @@ public class AgentObjectiveSystem : MonoBehaviour
                 if (child.CompareTag("Goal"))
                 {
                     allGoals.Add(child.gameObject);
-                    // Opcional: Reiniciar o estado visual do objetivo, se necessário
+                    // Optional: Reset the visual state of the goal, if necessary
                 }
             }
         }
@@ -116,7 +116,7 @@ public class AgentObjectiveSystem : MonoBehaviour
 
     public void CheckObjectives()
     {
-        // **Modificação para verificar se o reset por tempo está habilitado**
+        // **Modification to check if time reset is enabled**
         if (timeResetEnabled)
         {
             currentRoomTime += Time.deltaTime;
@@ -133,10 +133,10 @@ public class AgentObjectiveSystem : MonoBehaviour
             }
         }
 
-        // Verifica se a porta deve ser aberta
+        // Check if the door should be opened
         if (visitedGoals.Count == allGoals.Count - 1)
         {
-            // Abre a porta
+            // Open the door
             Door door = FindFirstObjectByType<Door>();
             if (door != null)
             {
@@ -144,7 +144,7 @@ public class AgentObjectiveSystem : MonoBehaviour
             }
         }
 
-        // Verifica se todos os objetivos foram visitados
+        // Check if all goals have been visited
         if (visitedGoals.Count == allGoals.Count)
         {
             agentController.AddReward(1.0f);
@@ -163,7 +163,7 @@ public class AgentObjectiveSystem : MonoBehaviour
         };
     }
 
-    // Métodos para o Curriculum Learning
+    // Methods for Curriculum Learning
     public void SetExplorationAllowed(bool allowed)
     {
         explorationAllowed = allowed;
@@ -182,7 +182,7 @@ public class AgentObjectiveSystem : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("OnTriggerEnter chamado com " + other.gameObject.name);
+        Debug.Log("OnTriggerEnter called with " + other.gameObject.name);
 
         if (other.CompareTag("Goal"))
         {
@@ -190,13 +190,13 @@ public class AgentObjectiveSystem : MonoBehaviour
             {
                 visitedGoals.Add(other.gameObject);
                 agentController.AddReward(0.5f);
-                Debug.Log($"Recompensa de 0.5f adicionada por visitar o objetivo: {other.gameObject.name}");
+                Debug.Log($"Added a reward of 0.5f for visiting the goal: {other.gameObject.name}");
 
-                // **Verifica se o objetivo específico foi alcançado**
+                // **Check if the specific goal was reached**
                 if (other.gameObject == specificGoal)
                 {
-                    timeResetEnabled = false; // Desabilita o reset por tempo
-                    Debug.Log("Objetivo específico alcançado. Reset por tempo desabilitado.");
+                    timeResetEnabled = false; // Disable time reset
+                    Debug.Log("Specific goal reached. Time reset disabled.");
                 }
             }
         }
@@ -204,7 +204,7 @@ public class AgentObjectiveSystem : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("OnCollisionEnter chamado com " + collision.gameObject.name);
+        Debug.Log("OnCollisionEnter called with " + collision.gameObject.name);
 
         if (collision.gameObject.CompareTag("Goal"))
         {
@@ -212,13 +212,13 @@ public class AgentObjectiveSystem : MonoBehaviour
             {
                 visitedGoals.Add(collision.gameObject);
                 agentController.AddReward(0.5f);
-                Debug.Log($"Recompensa de 0.5f adicionada por visitar o objetivo: {collision.gameObject.name}");
+                Debug.Log($"Added a reward of 0.5f for visiting the goal: {collision.gameObject.name}");
 
-                // **Verifica se o objetivo específico foi alcançado**
+                // **Check if the specific goal was reached**
                 if (collision.gameObject == specificGoal)
                 {
-                    timeResetEnabled = false; // Desabilita o reset por tempo
-                    Debug.Log("Objetivo específico alcançado. Reset por tempo desabilitado.");
+                    timeResetEnabled = false; // Disable time reset
+                    Debug.Log("Specific goal reached. Time reset disabled.");
                 }
             }
         }
@@ -228,14 +228,14 @@ public class AgentObjectiveSystem : MonoBehaviour
     {
         if (!Application.isPlaying) return;
 
-        // Visualiza os objetivos
+        // Visualize the goals
         Gizmos.color = Color.yellow;
         foreach (var goal in allGoals)
         {
             Gizmos.DrawWireSphere(goal.transform.position, goalReachDistance);
         }
 
-        // Mostra o tempo restante
+        // Show the remaining time
         float remainingTime = maxTimeInRoom - currentRoomTime;
         UnityEditor.Handles.Label(transform.position + Vector3.up * 2f,
             $"Time: {remainingTime:F1}s");

@@ -3,110 +3,110 @@ using System.Collections;
 
 public class Door : MonoBehaviour
 {
-    [Header("Configurações de Movimento")]
-    [SerializeField] private float alturaAbertura = 4f;
-    [SerializeField] private float velocidadeMovimento = 5f;
+    [Header("Movement Settings")]
+    [SerializeField] private float openingHeight = 4f;
+    [SerializeField] private float movementSpeed = 5f;
 
-    [Header("Configurações de Áudio")]
-    [SerializeField] private AudioClip somAbrirPorta;
-    [SerializeField] private AudioClip somFecharPorta;
-    [SerializeField] private AudioClip somMovimentoPorta;
-    [SerializeField] private float volumeSom = 1f;
-    [SerializeField] private bool usarSomContinuo = true;
+    [Header("Audio Settings")]
+    [SerializeField] private AudioClip doorOpenSound;
+    [SerializeField] private AudioClip doorCloseSound;
+    [SerializeField] private AudioClip doorMovementSound;
+    [SerializeField] private float soundVolume = 1f;
+    [SerializeField] private bool useContinuousSound = true;
 
-    private Vector3 posicaoFechada;
-    private Vector3 posicaoAberta;
-    private Coroutine movimentoCoroutine;
-    private bool portaAberta = false;
+    private Vector3 closedPosition;
+    private Vector3 openPosition;
+    private Coroutine movementCoroutine;
+    private bool isDoorOpen = false;
     private AudioSource audioSource;
 
     private void Start()
     {
-        posicaoFechada = transform.position;
-        posicaoAberta = posicaoFechada + Vector3.up * alturaAbertura;
+        closedPosition = transform.position;
+        openPosition = closedPosition + Vector3.up * openingHeight;
 
-        // Configuração do AudioSource
+        // Configure the AudioSource
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
-        // Configurações básicas do AudioSource
+        // Basic AudioSource settings
         audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 0.5f; // Som parcialmente 3D para facilitar audibilidade
+        audioSource.spatialBlend = 0.5f; // Partially 3D sound for better audibility
         audioSource.minDistance = 0.5f;
         audioSource.maxDistance = 50f;
         audioSource.rolloffMode = AudioRolloffMode.Linear;
-        audioSource.volume = volumeSom;
+        audioSource.volume = soundVolume;
     }
 
     public void OpenDoor()
     {
-        Debug.Log("OpenDoor chamada."); // Log para verificar a execução
-        if (!portaAberta)
+        Debug.Log("OpenDoor called."); // Log to verify execution
+        if (!isDoorOpen)
         {
-            MoverPara(posicaoAberta);
-            portaAberta = true;
+            MoveTo(openPosition);
+            isDoorOpen = true;
 
-            // Toca o som de abrir
-            if (somAbrirPorta != null)
+            // Play the open sound
+            if (doorOpenSound != null)
             {
-                Debug.Log("Tocando som de abrir porta.");
-                audioSource.PlayOneShot(somAbrirPorta, volumeSom);
+                Debug.Log("Playing door open sound.");
+                audioSource.PlayOneShot(doorOpenSound, soundVolume);
             }
         }
     }
 
     public void CloseDoor()
     {
-        Debug.Log("CloseDoor chamada."); // Log para verificar a execução
-        if (portaAberta)
+        Debug.Log("CloseDoor called."); // Log to verify execution
+        if (isDoorOpen)
         {
-            MoverPara(posicaoFechada);
-            portaAberta = false;
+            MoveTo(closedPosition);
+            isDoorOpen = false;
 
-            // Toca o som de fechar
-            if (somFecharPorta != null)
+            // Play the close sound
+            if (doorCloseSound != null)
             {
-                Debug.Log("Tocando som de fechar porta.");
-                audioSource.PlayOneShot(somFecharPorta, volumeSom);
+                Debug.Log("Playing door close sound.");
+                audioSource.PlayOneShot(doorCloseSound, soundVolume);
             }
         }
     }
 
-    private void MoverPara(Vector3 posicaoAlvo)
+    private void MoveTo(Vector3 targetPosition)
     {
-        if (movimentoCoroutine != null)
+        if (movementCoroutine != null)
         {
-            StopCoroutine(movimentoCoroutine);
+            StopCoroutine(movementCoroutine);
         }
-        movimentoCoroutine = StartCoroutine(MoverPorta(posicaoAlvo));
+        movementCoroutine = StartCoroutine(MoveDoor(targetPosition));
     }
 
-    private IEnumerator MoverPorta(Vector3 posicaoAlvo)
+    private IEnumerator MoveDoor(Vector3 targetPosition)
     {
-        float distanciaInicial = Vector3.Distance(transform.position, posicaoAlvo);
+        float initialDistance = Vector3.Distance(transform.position, targetPosition);
 
-        if (usarSomContinuo && somMovimentoPorta != null)
+        if (useContinuousSound && doorMovementSound != null)
         {
-            Debug.Log("Tocando som de movimento contínuo.");
-            audioSource.clip = somMovimentoPorta;
+            Debug.Log("Playing continuous movement sound.");
+            audioSource.clip = doorMovementSound;
             audioSource.loop = true;
             audioSource.Play();
         }
 
-        while (Vector3.Distance(transform.position, posicaoAlvo) > 0.01f)
+        while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, posicaoAlvo, velocidadeMovimento * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, movementSpeed * Time.deltaTime);
             yield return null;
         }
 
-        transform.position = posicaoAlvo;
+        transform.position = targetPosition;
 
-        if (usarSomContinuo && audioSource.isPlaying && somMovimentoPorta != null)
+        if (useContinuousSound && audioSource.isPlaying && doorMovementSound != null)
         {
-            Debug.Log("Parando som de movimento contínuo.");
+            Debug.Log("Stopping continuous movement sound.");
             audioSource.Stop();
         }
     }

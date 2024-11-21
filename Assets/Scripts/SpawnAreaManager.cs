@@ -3,36 +3,36 @@ using UnityEngine;
 public class SpawnAreaManager : MonoBehaviour
 {
     [Header("Spawn Settings")]
-    [Tooltip("GameObject que define o centro da área de spawn")]
+    [Tooltip("GameObject that defines the center of the spawn area")]
     public Transform spawnAreaCenter;
     
-    [Tooltip("Tamanho da área de spawn em X")]
+    [Tooltip("Spawn area size in X")]
     public float spawnAreaWidth = 10f;
     
-    [Tooltip("Tamanho da área de spawn em Z")]
+    [Tooltip("Spawn area size in Z")]
     public float spawnAreaLength = 10f;
     
-    [Tooltip("Altura do agente ao spawnar")]
+    [Tooltip("Agent's height when spawning")]
     public float spawnHeight = 0.5f;
 
     [Header("Visual Settings")]
-    [Tooltip("Cor da área de spawn no editor")]
+    [Tooltip("Color of the spawn area in the editor")]
     public Color spawnAreaColor = new Color(1f, 1f, 0f, 0.2f);
     public Color spawnAreaWireColor = Color.yellow;
     public bool showGizmos = true;
 
     [Header("Layer Settings")]
-    [Tooltip("Layer para verificação do chão")]
+    [Tooltip("Layer for ground checking")]
     public LayerMask groundCheckLayer;
 
     private void OnValidate()
     {
-        // Garante valores mínimos para as dimensões
+        // Ensure minimum values for dimensions
         spawnAreaWidth = Mathf.Max(1f, spawnAreaWidth);
         spawnAreaLength = Mathf.Max(1f, spawnAreaLength);
         spawnHeight = Mathf.Max(0.1f, spawnHeight);
 
-        // Auto-referencia o centro se não estiver definido
+        // Auto-assign the center if not set
         if (spawnAreaCenter == null)
             spawnAreaCenter = transform;
     }
@@ -41,24 +41,24 @@ public class SpawnAreaManager : MonoBehaviour
     {
         if (spawnAreaCenter == null)
         {
-            Debug.LogError("Spawn Area Center não definido!");
+            Debug.LogError("Spawn Area Center not defined!");
             return transform.position;
         }
 
-        // Calcula os limites baseados no centro e tamanho
+        // Calculate boundaries based on center and size
         float halfWidth = spawnAreaWidth / 2f;
         float halfLength = spawnAreaLength / 2f;
 
-        // Gera posição aleatória dentro da área definida
+        // Generate random position within the defined area
         float randomX = Random.Range(-halfWidth, halfWidth);
         float randomZ = Random.Range(-halfLength, halfLength);
 
-        // Posição final relativa ao centro da área de spawn
+        // Final position relative to the spawn area center
         Vector3 spawnPosition = spawnAreaCenter.position + 
             spawnAreaCenter.right * randomX + 
             spawnAreaCenter.forward * randomZ;
 
-        // Ajusta a altura com raycast
+        // Adjust height with raycast
         if (Physics.Raycast(spawnPosition + Vector3.up * 3f, Vector3.down, out RaycastHit hit, 5f, groundCheckLayer))
         {
             spawnPosition.y = hit.point.y + spawnHeight;
@@ -75,13 +75,13 @@ public class SpawnAreaManager : MonoBehaviour
     {
         if (agent == null) return;
 
-        // Define nova posição
+        // Set new position
         agent.transform.position = GetRandomSpawnPosition();
         
-        // Define rotação aleatória
+        // Set random rotation
         agent.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
-        // Reseta velocidades se tiver Rigidbody
+        // Reset velocities if Rigidbody is present
         if (agent.TryGetComponent<Rigidbody>(out Rigidbody rb))
         {
             rb.linearVelocity = Vector3.zero;
@@ -93,7 +93,7 @@ public class SpawnAreaManager : MonoBehaviour
     {
         if (!showGizmos || spawnAreaCenter == null) return;
 
-        // Matriz para rotacionar a área com o centro
+        // Matrix to rotate the area with the center
         Matrix4x4 rotationMatrix = Matrix4x4.TRS(
             spawnAreaCenter.position, 
             spawnAreaCenter.rotation, 
@@ -101,19 +101,19 @@ public class SpawnAreaManager : MonoBehaviour
         );
         Gizmos.matrix = rotationMatrix;
 
-        // Desenha área sólida
+        // Draw solid area
         Gizmos.color = spawnAreaColor;
         Vector3 size = new Vector3(spawnAreaWidth, 0.1f, spawnAreaLength);
         Gizmos.DrawCube(Vector3.zero, size);
 
-        // Desenha contorno
+        // Draw outline
         Gizmos.color = spawnAreaWireColor;
         Gizmos.DrawWireCube(Vector3.zero, size);
 
-        // Reseta matriz
+        // Reset matrix
         Gizmos.matrix = Matrix4x4.identity;
 
-        // Desenha pontos nos cantos da área
+        // Draw points at the corners of the area
         Vector3[] corners = GetSpawnAreaCorners();
         float pointSize = 0.2f;
         Gizmos.color = Color.red;
@@ -135,10 +135,10 @@ public class SpawnAreaManager : MonoBehaviour
         Vector3 right = spawnAreaCenter.right;
         Vector3 forward = spawnAreaCenter.forward;
 
-        corners[0] = center + (right * halfWidth) + (forward * halfLength);    // Frente Direita
-        corners[1] = center + (right * halfWidth) - (forward * halfLength);    // Trás Direita
-        corners[2] = center - (right * halfWidth) - (forward * halfLength);    // Trás Esquerda
-        corners[3] = center - (right * halfWidth) + (forward * halfLength);    // Frente Esquerda
+        corners[0] = center + (right * halfWidth) + (forward * halfLength);    // Front Right
+        corners[1] = center + (right * halfWidth) - (forward * halfLength);    // Back Right
+        corners[2] = center - (right * halfWidth) - (forward * halfLength);    // Back Left
+        corners[3] = center - (right * halfWidth) + (forward * halfLength);    // Front Left
 
         return corners;
     }

@@ -9,7 +9,7 @@ using Unity.MLAgents.Actuators;
 [RequireComponent(typeof(AgentObjectiveSystem))]
 public class NavigationAgentController : Agent
 {
-    [Header("Componentes Requeridos")]
+    [Header("Required Components")]
     [SerializeField] public AgentMovement movementSystem;
     [SerializeField] public AgentRewardSystem rewardSystem;
     [SerializeField] public AgentObservationSystem observationSystem;
@@ -18,7 +18,7 @@ public class NavigationAgentController : Agent
 
     public int lessonNumber;
 
-    // Evento para notificar quando uma recompensa for adicionada
+    // Event to notify when a reward is added
     public delegate void AddRewardDelegate(float reward);
     public event AddRewardDelegate OnAddReward;
 
@@ -41,11 +41,11 @@ public class NavigationAgentController : Agent
         if (spawnManager == null)
             spawnManager = GetComponentInParent<SpawnAreaManager>();
 
-        // Verifica e avisa sobre componentes faltantes
+        // Check and warn about missing components
         if (spawnManager == null)
-            Debug.LogError("SpawnAreaManager não encontrado na cena! Adicione um SpawnAreaManager.");
+            Debug.LogError("SpawnAreaManager not found in the scene! Please add a SpawnAreaManager.");
 
-        // Passa a referência para o ObjectiveSystem
+        // Pass the reference to the ObjectiveSystem
         if (objectiveSystem != null && spawnManager != null)
             objectiveSystem.spawnManager = spawnManager;
     }
@@ -62,14 +62,14 @@ public class NavigationAgentController : Agent
 
     public override void OnEpisodeBegin()
     {
-        // Definir valores fixos para os parâmetros
-        float maxJumpHeight = 5.0f; // Valor desejado para a altura máxima do pulo
-        bool allowMovement = true; // Permitir movimento
-        bool allowJump = true;     // Permitir pular
-        bool exploreRoom = true;   // Permitir exploração da sala
-        bool hasObjective = true;  // O agente tem um objetivo
+        // Set fixed values for parameters
+        float maxJumpHeight = 5.0f; // Desired value for maximum jump height
+        bool allowMovement = true; // Allow movement
+        bool allowJump = true;     // Allow jumping
+        bool exploreRoom = true;   // Allow room exploration
+        bool hasObjective = true;  // The agent has an objective
 
-        // Configurar o agente e o ambiente com base nesses parâmetros
+        // Configure the agent and environment based on these parameters
         movementSystem.SetMovementAllowed(allowMovement);
         movementSystem.SetJumpAllowed(allowJump);
         movementSystem.SetMaxJumpHeight(maxJumpHeight);
@@ -77,7 +77,7 @@ public class NavigationAgentController : Agent
         objectiveSystem.SetExplorationAllowed(exploreRoom);
         objectiveSystem.SetObjectiveActive(hasObjective);
 
-        // Resetar os sistemas
+        // Reset the systems
         movementSystem.ResetMovement();
         rewardSystem.ResetRewards();
         observationSystem.ResetObservations();
@@ -115,7 +115,7 @@ public class NavigationAgentController : Agent
         rewardSystem.ProcessCollision(collision);
     }
 
-    // Sobrescreve o método AddReward para notificar o sistema de recompensas
+    // Override the AddReward method to notify the reward system
     public new void AddReward(float reward)
     {
         base.AddReward(reward);
@@ -124,7 +124,7 @@ public class NavigationAgentController : Agent
 
     private void OnDestroy()
     {
-        // Remove assinaturas de eventos para evitar leaks
+        // Remove event subscriptions to prevent leaks
         if (rewardSystem != null)
         {
             OnAddReward -= rewardSystem.OnAddReward;

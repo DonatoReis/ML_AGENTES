@@ -6,7 +6,7 @@ public class CameraFollow2D : MonoBehaviour
     public float smoothSpeed = 0.125f;
     public Vector3 offset = new Vector3(0, 2, -10);
     
-    [Header("Limites da Câmera")]
+    [Header("Camera Limits")]
     public float minX;
     public float maxX;
     public float minY;
@@ -16,17 +16,17 @@ public class CameraFollow2D : MonoBehaviour
     {
         if (target == null) return;
 
-        // Posição desejada da câmera
+        // Desired camera position
         Vector3 desiredPosition = target.position + offset;
         
-        // Suaviza o movimento
+        // Smooth the movement
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
         
-        // Aplica limites
+        // Apply limits
         float clampedX = Mathf.Clamp(smoothedPosition.x, minX, maxX);
         float clampedY = Mathf.Clamp(smoothedPosition.y, minY, maxY);
         
-        // Atualiza posição
+        // Update position
         transform.position = new Vector3(clampedX, clampedY, offset.z);
     }
 }

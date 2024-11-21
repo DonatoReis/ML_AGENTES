@@ -2,20 +2,20 @@ using UnityEngine;
 
 public class AgentRewardSystem : MonoBehaviour
 {
-    [Header("Configurações de Recompensas")]
-    public float recompensaPlacaRapida = 1.0f;
-    public float recompensaPlacaMedia = 0.9f;
-    public float recompensaPlacaLenta = 0.8f;
-    public float recompensaExploracao = 0.0f;
-    public float penalizacaoQueda = -0.5f;
-    public float penalizacaoParede = -0.1f;
-    public float penalizacaoChao = -0.05f;
-    public float penalizacaoPorTempo = -0.1f;
+    [Header("Reward Settings")]
+    public float fastPlateReward = 1.0f;
+    public float mediumPlateReward = 0.9f;
+    public float slowPlateReward = 0.8f;
+    public float explorationReward = 0.0f;
+    public float fallPenalty = -0.5f;
+    public float wallPenalty = -0.1f;
+    public float groundPenalty = -0.05f;
+    public float timePenalty = -0.1f;
 
-    [Header("Recompensa por Escapar da Sala")]
-    public float recompensaEscaparSala = 1.0f;
-    public GameObject escapeTarget; // Alvo definido no Inspector
-    public LayerMask goalLayer;     // Layer da plataforma
+    [Header("Reward for Escaping the Room")]
+    public float escapeRoomReward = 1.0f;
+    public GameObject escapeTarget; // Target set in the Inspector
+    public LayerMask goalLayer;     // Platform layer
 
     private NavigationAgentController agentController;
     private float episodeStartTime;
@@ -25,9 +25,9 @@ public class AgentRewardSystem : MonoBehaviour
 
     private Vector3 lastPosition;
     private float inactivityTimer = 0f;
-    private const float inactivityThreshold = 5f; // Tempo em segundos
+    private const float inactivityThreshold = 5f; // Time in seconds
 
-    // Variáveis para controle de recompensas e penalizações
+    // Variables to control rewards and penalties
     private float frameReward = 0f;
     private float timeSinceLastPenalty = 0f;
     private float timeSinceLastExplorationReward = 0f;
@@ -37,7 +37,7 @@ public class AgentRewardSystem : MonoBehaviour
         agentController = controller;
         lastPosition = transform.position;
 
-        // Subscrição ao evento de recompensa
+        // Subscribe to the reward event
         agentController.OnAddReward += OnAddReward;
     }
 
@@ -50,21 +50,21 @@ public class AgentRewardSystem : MonoBehaviour
             inactivityTimer += Time.deltaTime;
             if (inactivityTimer >= inactivityThreshold)
             {
-                agentController.AddReward(-0.01f); // Penaliza por inatividade
-                inactivityTimer = 0f; // Reseta o temporizador
+                agentController.AddReward(-0.01f); // Penalize for inactivity
+                inactivityTimer = 0f; // Reset the timer
             }
         }
         else
         {
-            inactivityTimer = 0f; // Reseta se o agente se mover
+            inactivityTimer = 0f; // Reset if the agent moves
         }
 
         lastPosition = transform.position;
 
-        // Imprime a recompensa acumulada do frame atual se for significativa
+        // Print the accumulated reward of the current frame if significant
         if (Mathf.Abs(frameReward) > 0.05f)
         {
-            Debug.Log($"Recompensa no frame {Time.frameCount}: {frameReward}");
+            Debug.Log($"Reward in frame {Time.frameCount}: {frameReward}");
         }
         frameReward = 0f;
     }
@@ -81,41 +81,41 @@ public class AgentRewardSystem : MonoBehaviour
     {
         float timeInEpisode = Time.time - episodeStartTime;
 
-        // Recompensa baseada no tempo para alcançar todos os objetivos
+        // Reward based on time to reach all objectives
         if (objectiveState.visitedGoalsCount == objectiveState.totalGoals)
         {
             if (timeInEpisode < 5f)
-                agentController.AddReward(recompensaPlacaRapida);
+                agentController.AddReward(fastPlateReward);
             else if (timeInEpisode < 10f)
-                agentController.AddReward(recompensaPlacaMedia);
+                agentController.AddReward(mediumPlateReward);
             else
-                agentController.AddReward(recompensaPlacaLenta);
+                agentController.AddReward(slowPlateReward);
 
             agentController.EndEpisode();
         }
         else
         {
-            // Recompensa por exploração aplicada a cada segundo
+            // Exploration reward applied every second
             timeSinceLastExplorationReward += Time.deltaTime;
             if (timeSinceLastExplorationReward >= 1f)
             {
-                agentController.AddReward(recompensaExploracao);
+                agentController.AddReward(explorationReward);
                 timeSinceLastExplorationReward = 0f;
             }
         }
 
-        // Penalização por tempo aplicada a cada segundo
+        // Time penalty applied every second
         timeSinceLastPenalty += Time.deltaTime;
         if (timeSinceLastPenalty >= 1f)
         {
-            agentController.AddReward(-penalizacaoPorTempo);
+            agentController.AddReward(-timePenalty);
             timeSinceLastPenalty = 0f;
         }
 
-        // Penalizações por cair
+        // Penalties for falling
         if (movementData.position.y < -1f)
         {
-            agentController.AddReward(penalizacaoQueda);
+            agentController.AddReward(fallPenalty);
             agentController.EndEpisode();
         }
     }
@@ -124,32 +124,32 @@ public class AgentRewardSystem : MonoBehaviour
     {
         if (((1 << collision.gameObject.layer) & wallLayer) != 0)
         {
-            agentController.AddReward(penalizacaoParede);
+            agentController.AddReward(wallPenalty);
         }
         else if (((1 << collision.gameObject.layer) & groundLayer) != 0)
         {
-            agentController.AddReward(penalizacaoChao);
+            agentController.AddReward(groundPenalty);
         }
         else if (((1 << collision.gameObject.layer) & obstacleLayer) != 0)
         {
-            // Penalização por colidir com obstáculo
-            agentController.AddReward(penalizacaoChao);
+            // Penalty for colliding with an obstacle
+            agentController.AddReward(groundPenalty);
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Verifica se o agente alcançou o escapeTarget ou colidiu com a goalLayer
+        // Check if the agent reached the escapeTarget or collided with the goalLayer
         if (other.gameObject == escapeTarget || ((1 << other.gameObject.layer) & goalLayer) != 0)
         {
-            agentController.AddReward(recompensaEscaparSala);
-            // Remover ou comentar a linha abaixo para que o agente não seja resetado
+            agentController.AddReward(escapeRoomReward);
+            // Remove or comment out the line below to prevent the agent from being reset
             // agentController.EndEpisode();
-            Debug.Log("Agente escapou da sala! Recompensa concedida.");
+            Debug.Log("Agent escaped the room! Reward granted.");
         }
     }
 
-    // Método chamado quando uma recompensa é adicionada
+    // Method called when a reward is added
     public void OnAddReward(float reward)
     {
         frameReward += reward;
